@@ -8,8 +8,6 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -65,7 +63,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
     private void getNearestPlace(Location location) {
         placeArrayList = new ArrayList<>();
         String API_KEY = "AIzaSyATT5Cu5IeSMvlLrm3m90ue0MqD8mpCsBs";
-        String urlToGetNearestPlace = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + location.getLatitude() + "," + location.getLongitude() + "&radius=500&types=cafe|restaurant&key=" + API_KEY;
+        String urlToGetNearestPlace = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + location.getLatitude() + "," + location.getLongitude() + "&radius=2000&types=cafe|restaurant&key=" + API_KEY;
         JsonObjectRequest requestToGetPlace = new JsonObjectRequest(Request.Method.GET, urlToGetNearestPlace, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -83,6 +81,8 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
                         String vicinity = result.getJSONObject(i).getString("vicinity");
                         place = new Place(name, nearestPlaceId, vicinity, lat, lng);
                         placeArrayList.add(place);
+                        LatLng latLng=new LatLng(lat,lng);
+                        handleNewLocation(place);
                     }
                     Toast.makeText(getApplicationContext(), placeArrayList.get(0).getName(), Toast.LENGTH_LONG).show();
                 } catch (JSONException e) {
@@ -143,11 +143,11 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
 
     }
 
-    private void handleNewLocation(Location location) {
-        double currentLatitude = location.getLatitude();
-        double currentLongitude = location.getLongitude();
-        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
-        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+    private void handleNewLocation(final Place place) {
+      //  double currentLatitude = latLng.latitude;
+      //  double currentLongitude = latLng.longitude;
+
+       /* mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override
             public View getInfoWindow(Marker marker) {
                 return null;
@@ -159,7 +159,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
                 View v = getLayoutInflater().inflate(R.layout.windowlayout, null);
 
                 // Getting the position from the marker
-                LatLng latLng = marker.getPosition();
+                // LatLng latLng = marker.getPosition();
 
                 // Getting reference to the TextView to set latitude
                 TextView tvLat = (TextView) v.findViewById(R.id.tv_name);
@@ -169,24 +169,31 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
 
 
                 // Setting the latitude
-                tvLat.setText("Nazmul Hasan");
+                tvLat.setText(place.getName());
 
                 // Setting the longitude
-                tvLng.setText("Contact: 0283837");
+                tvLng.setText(place.getVicinity());
 
                 // Returning the view containing InfoWindow contents
                 return v;
             }
         });
+*/
+      //  mMap.clear();
+        
+        double lat=place.getLatitude();
+        double lon=place.getLongitude();
+        LatLng currentLatLng= new LatLng(lat,lon);
+
         MarkerOptions options = new MarkerOptions()
-                .position(latLng).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                .title("I am here!");
-        mMap.clear();
+                .position(currentLatLng).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).title(place.getName()).snippet(place.getVicinity());
+
         Marker marker = mMap.addMarker(options);
-        marker.showInfoWindow();
+        //marker.showInfoWindow();
+
         mMap.setOnInfoWindowClickListener(this);
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15.0f));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLatLng));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15.0f));
 
     }
 
@@ -200,8 +207,10 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
         if (location == null) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         } else {
-            handleNewLocation(location);
             getNearestPlace(location);
+
+          //  handleNewLocation(location);
+
         }
 
     }
@@ -228,7 +237,8 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
     @Override
     public void onLocationChanged(Location location) {
         mMap.clear();
-        handleNewLocation(location);
+        getNearestPlace(location);
+      //  handleNewLocation(location);
     }
 
     @Override
