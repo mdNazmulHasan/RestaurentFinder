@@ -1,56 +1,41 @@
 package com.nerdcastle.nazmul.restaurentfinder;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-/**
- *  Model class for Places data.
- * 
- * @author Karn Shah
- * @Date   10/3/2013
- *
- */
 public class Place {
-    private String id;
-    private String icon;
     private String name;
+    private String nearestPlaceId;
     private String vicinity;
+    private String contact;
     private Double latitude;
     private Double longitude;
 
-    public String getId() {
-        return id;
-    }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getIcon() {
-        return icon;
-    }
-
-    public void setIcon(String icon) {
-        this.icon = icon;
-    }
-
-    public Double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(Double latitude) {
+    public Place(String name, String nearestPlaceId, String vicinity, String contact, Double latitude, Double longitude) {
+        this.name = name;
+        this.nearestPlaceId = nearestPlaceId;
+        this.vicinity = vicinity;
+        this.contact = contact;
         this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
         this.longitude = longitude;
+    }
+
+    public Place(String name, String nearestPlaceId, String vicinity, Double latitude, Double longitude) {
+        this.name = name;
+        this.nearestPlaceId = nearestPlaceId;
+        this.vicinity = vicinity;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    public String getNearestPlaceId() {
+        return nearestPlaceId;
+    }
+
+    public void setNearestPlaceId(String nearestPlaceId) {
+        this.nearestPlaceId = nearestPlaceId;
+    }
+
+    public Place() {
     }
 
     public String getName() {
@@ -69,27 +54,27 @@ public class Place {
         this.vicinity = vicinity;
     }
 
-    static Place jsonToPontoReferencia(JSONObject pontoReferencia) {
-        try {
-            Place result = new Place();
-            JSONObject geometry = (JSONObject) pontoReferencia.get("geometry");
-            JSONObject location = (JSONObject) geometry.get("location");
-            result.setLatitude((Double) location.get("lat"));
-            result.setLongitude((Double) location.get("lng"));
-            result.setIcon(pontoReferencia.getString("icon"));
-            result.setName(pontoReferencia.getString("name"));
-            result.setVicinity(pontoReferencia.getString("vicinity"));
-            result.setId(pontoReferencia.getString("id"));
-            return result;
-        } catch (JSONException ex) {
-            Logger.getLogger(Place.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
+    public String getContact() {
+        return contact;
     }
 
-    @Override
-    public String toString() {
-        return "Place{" + "id=" + id + ", icon=" + icon + ", name=" + name + ", latitude=" + latitude + ", longitude=" + longitude + '}';
+    public void setContact(String contact) {
+        this.contact = contact;
     }
 
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
 }

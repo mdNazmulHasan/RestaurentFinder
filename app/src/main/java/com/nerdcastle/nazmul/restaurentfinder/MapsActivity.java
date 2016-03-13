@@ -9,10 +9,13 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -26,6 +29,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
 public class MapsActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnInfoWindowClickListener,
         LocationListener {
@@ -34,13 +43,14 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
+    Place place;
+    ArrayList<Place> placeArrayList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
-
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -50,6 +60,43 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(10 * 1000)
                 .setFastestInterval(1 * 1000);
+    }
+
+    private void getNearestPlace(Location location) {
+        placeArrayList = new ArrayList<>();
+        String API_KEY = "AIzaSyATT5Cu5IeSMvlLrm3m90ue0MqD8mpCsBs";
+        String urlToGetNearestPlace = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + location.getLatitude() + "," + location.getLongitude() + "&radius=500&types=cafe|restaurant&key=" + API_KEY;
+        JsonObjectRequest requestToGetPlace = new JsonObjectRequest(Request.Method.GET, urlToGetNearestPlace, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray result = response.getJSONArray("results");
+                    for (int i = 0; i < result.length(); i++) {
+                        String latitude = result.getJSONObject(i).getJSONObject("geometry")
+                                .getJSONObject("location").getString("lat");
+                        double lat = Double.parseDouble(latitude);
+                        String longitude = result.getJSONObject(i).getJSONObject("geometry")
+                                .getJSONObject("location").getString("lng");
+                        double lng = Double.parseDouble(longitude);
+                        String name = result.getJSONObject(i).getString("name");
+                        String nearestPlaceId = result.getJSONObject(i).getString("place_id");
+                        String vicinity = result.getJSONObject(i).getString("vicinity");
+                        place = new Place(name, nearestPlaceId, vicinity, lat, lng);
+                        placeArrayList.add(place);
+                    }
+                    Toast.makeText(getApplicationContext(), placeArrayList.get(0).getName(), Toast.LENGTH_LONG).show();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+        AppController.getInstance().addToRequestQueue(requestToGetPlace);
     }
 
     @Override
@@ -92,7 +139,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
             return;
         }
         mMap.setMyLocationEnabled(true);
-       // mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+        // mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
 
     }
 
@@ -119,14 +166,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
 
                 // Getting reference to the TextView to set longitude
                 TextView tvLng = (TextView) v.findViewById(R.id.tv_contact);
-                Button callBtn = (Button) v.findViewById(R.id.callBtn);
-                callBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getApplicationContext(), "Who are you trying to call!?",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
+
 
                 // Setting the latitude
                 tvLat.setText("Nazmul Hasan");
@@ -161,6 +201,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         } else {
             handleNewLocation(location);
+            getNearestPlace(location);
         }
 
     }
