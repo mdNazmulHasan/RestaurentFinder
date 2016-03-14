@@ -4,6 +4,7 @@
     <string name="app_name">GooglePlaceAPiDemo</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="placesAPI_KEY">AIzaSyATT5Cu5IeSMvlLrm3m90ue0MqD8mpCsBs</string>
     <string-array name="places">
         <item >ATM</item>
         <item >Bank</item>
