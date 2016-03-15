@@ -1,6 +1,7 @@
 package com.nerdcastle.nazmul.restaurentfinder;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -11,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -41,7 +43,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 
 public class MapsActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,GoogleMap.OnInfoWindowClickListener,
+        GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnInfoWindowClickListener,
         LocationListener {
 
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
@@ -49,7 +51,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     Place place;
-   // ArrayList<Place> placeArrayList;
+    // ArrayList<Place> placeArrayList;
     String placesAPI_KEY;
     String urlToGetNearestPlace;
     double lat;
@@ -57,6 +59,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
     String name;
     String nearestPlaceId;
     String vicinity;
+    String contact;
     HashMap<String, HashMap> extraMarkerInfo = new HashMap<String, HashMap>();
 
     @Override
@@ -77,7 +80,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
 
     private void getNearestPlace(Location location) {
 
-       // placeArrayList = new ArrayList<>();
+        // placeArrayList = new ArrayList<>();
         placesAPI_KEY = getString(R.string.placesAPI_KEY);
         urlToGetNearestPlace = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + location.getLatitude() + "," + location.getLongitude() + "&radius=2000&types=cafe|restaurant&key=" + placesAPI_KEY;
         JsonObjectRequest requestToGetPlace = new JsonObjectRequest(Request.Method.GET, urlToGetNearestPlace, new Response.Listener<JSONObject>() {
@@ -96,7 +99,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
                         nearestPlaceId = result.getJSONObject(i).getString("place_id");
                         vicinity = result.getJSONObject(i).getString("vicinity");
 
-                        place = new Place(name,nearestPlaceId,vicinity,lat,lng);
+                        place = new Place(name, nearestPlaceId, vicinity, lat, lng);
                         getPlaceDetails(place);
                     }
                 } catch (JSONException e) {
@@ -114,7 +117,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
     }
 
     private void getPlaceDetails(final Place place) {
-        nearestPlaceId=place.getNearestPlaceId();
+        nearestPlaceId = place.getNearestPlaceId();
         placesAPI_KEY = getString(R.string.placesAPI_KEY);
         String urlToGetDetails = "https://maps.googleapis.com/maps/api/place/details/json?placeid=" + nearestPlaceId + "&key=" + placesAPI_KEY;
         JsonObjectRequest requestToGetDetails = new JsonObjectRequest(Request.Method.GET, urlToGetDetails, new Response.Listener<JSONObject>() {
@@ -208,7 +211,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
         });
     }
 
-    private void handleNewLocation( final Place place) {
+    private void handleNewLocation(final Place place) {
 
         double lat = place.getLatitude();
         double lon = place.getLongitude();
@@ -271,7 +274,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
     private void setMyLocationMarker(Location location) {
         mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(),
                 location.getLongitude())).title("I am here"));
-        LatLng myLocationLatLng=new LatLng(location.getLatitude(),location.getLongitude());
+        LatLng myLocationLatLng = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocationLatLng));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocationLatLng, 15.0f));
     }
@@ -279,11 +282,21 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
     @Override
     public void onInfoWindowClick(Marker marker) {
         HashMap<String, String> marker_data = extraMarkerInfo.get(marker.getId());
-        String phoneNumber=marker_data.get("contact");
-        Intent intent = new Intent(Intent.ACTION_DIAL);
-        intent.setData(Uri.parse("tel:" + phoneNumber));
-        startActivity(intent);
-        //Toast.makeText(getApplicationContext(),phoneNumber,Toast.LENGTH_LONG).show();
+        contact = marker_data.get("contact");
+        AlertDialog.Builder builder =
+                new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
+        builder.setTitle("Warning!");
+        builder.setMessage("Would you like to call?");
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(Intent.ACTION_DIAL);
+                intent.setData(Uri.parse("tel:" + contact));
+                startActivity(intent);
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
 
     }
 }
