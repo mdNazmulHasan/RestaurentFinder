@@ -28,6 +28,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -275,8 +276,12 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
         mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(),
                 location.getLongitude())).title("I am here"));
         LatLng myLocationLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocationLatLng));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocationLatLng, 15.0f));
+        CameraUpdate center=
+                CameraUpdateFactory.newLatLng(myLocationLatLng);
+        CameraUpdate zoom=CameraUpdateFactory.zoomTo(15.0f);
+
+        mMap.moveCamera(center);
+        mMap.animateCamera(zoom);
     }
 
     @Override
